@@ -57,11 +57,11 @@ class MyPublisherNode(DTROS):
                 line_sens, read, correction, error= pid.PidClass().pid_run(self.lasterror)
                 max_speed = float(rospy.get_param("/maxvel"))
                 
-                if line_sens == [0,0,0,0,1,1,1,1] or line_sens == [0,0,0,0,0,1,1,1] or line_sens == [0,0,0,1,1,1,1,1]: #parem 90 kraadi
+                if line_sens == [0,0,0,0,1,1,1,1] or line_sens == [0,0,0,0,0,1,1,1] or line_sens == [0,0,0,1,1,1,1,1] or line_sens == [0,0,1,1,1,1,1,1]: #parem 90 kraadi
                     speed.vel_left = max_speed*2
                     speed.vel_right = 0
                     self.pub.publish(speed)
-                if line_sens == [1,1,1,1,0,0,0,0] or line_sens == [1,1,1,0,0,0,0,0] or line_sens == [1,1,1,1,1,0,0,0]: #vasak 90 kraadi
+                if line_sens == [1,1,1,1,0,0,0,0] or line_sens == [1,1,1,0,0,0,0,0] or line_sens == [1,1,1,1,1,0,0,0] or line_sens == [1,1,1,1,1,1,0,0]: #vasak 90 kraadi
                     speed.vel_left = 0
                     speed.vel_right = max_speed*2
                     self.pub.publish(speed)
