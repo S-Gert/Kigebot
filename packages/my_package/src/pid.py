@@ -27,8 +27,8 @@ class PidClass():
             read = bin(read)[2:].zfill(8)
             
             Kp = float(rospy.get_param("/p")) # 0.045
-            Ki = float(rospy.get_param("/i")) # 0.01
-            Kd = float(rospy.get_param("/d")) # 0.015
+            Ki = float(rospy.get_param("/i")) # 0.001
+            Kd = float(rospy.get_param("/d")) # 0.017
             
             line_sens = []
             

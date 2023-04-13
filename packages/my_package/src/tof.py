@@ -27,8 +27,8 @@ class TofPublish(DTROS):
     def run(self):
         rate = rospy.Rate(20)
         while not rospy.is_shutdown():
-            self.kaugus_cm = round(self.range*100, 1)
-            while self.kaugus_cm <= 20.0:
+            self.kaugus_cm = round(self.range*100, 1) #teeb tof sensori kauguse sentimeetriteks ja ümardab
+            while self.kaugus_cm <= 35.0:
                 self.kaugus_cm = round(self.range*100, 1)
                 self.tofpub.publish("wall in progress")
                 print("Wall in progress")
@@ -40,10 +40,11 @@ class TofPublish(DTROS):
                 rate.sleep()
 
             if self.sein == 1:
+                time.sleep(0.2)
                 speed.vel_right = 0.5
                 speed.vel_left = 0.3
                 self.pub.publish(speed)
-                time.sleep(1.0)
+                time.sleep(1.2)
                 self.tofpub.publish("no wall")
                 print("Wall done")
                 self.sein = 0
