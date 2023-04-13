@@ -99,6 +99,4 @@ if __name__ == '__main__':
     node.run()
     rospy.spin()
     
-#GITHUB AAaaaaaaa
-#fsdsfduigfignig
-#uiuifiuig
+#lalala lilili lolololo
