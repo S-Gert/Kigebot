@@ -41,10 +41,11 @@ class TofPublish(DTROS):
                 speed.vel_right = 0.5
                 speed.vel_left = 0.25
                 self.pub.publish(speed)
-                time.sleep(1.7)
+                time.sleep(2)
                 speed.vel_right = 0.0
                 speed.vel_left = 0.5
                 self.pub.publish(speed)
+                time.sleep(0.1)
                 self.tofpub.publish("no wall")
                 print("Wall done")
                 self.sein = 0
