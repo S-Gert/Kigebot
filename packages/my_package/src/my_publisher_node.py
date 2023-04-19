@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 
-import os
-import numpy as np
 import rospy
 from duckietown.dtros import DTROS, NodeType
 from std_msgs.msg import String
 from smbus2 import SMBus
-from duckietown_msgs.msg import WheelsCmdStamped, WheelEncoderStamped
-from sensor_msgs.msg import Range
-import time
+from duckietown_msgs.msg import WheelsCmdStamped
 import pid
 
 speed = WheelsCmdStamped()
@@ -21,31 +17,59 @@ class MyPublisherNode(DTROS):
         self.odosub = rospy.Subscriber('odometry_publisher',String, self.odometry_callback)
         self.tofsub = rospy.Subscriber('tof_publisher', String, self.tof_callback)
         
-        #CALLBACK MUUTUJAD
-        
+        #CALLBACK VARIABLES:
         self.bus = SMBus(1)
         self.ododata = 0
         self.tofdata = 0
-        self.piddata = 0
         
-        #PID MUUTUJAD
-        
+        #PID VARIABLES:
         self.previous_left = 0
         self.previous_right = 0
-        self.lasterror = 0
-        self.lastcorrection = 0
-        
+        self.last_error = 0
+        self.last_correction = 0    
+    
     def odometry_callback(self, data):
         self.ododata = data.data
         
     def tof_callback(self, data):
         self.tofdata = data.data
         
+    def publish_pid_values_to_speed(self, max_speed, correction, line_sens):
+        speed.vel_left = max_speed - correction
+        speed.vel_right = max_speed + correction
+        if len(line_sens) == 0:
+            speed.vel_left = self.previous_left
+            speed.vel_right = self.previous_right
+        speed.vel_left = max(0.0, min(speed.vel_left, 0.5))
+        speed.vel_right = max(0.0, min(speed.vel_right, 0.5))
+        self.previous_left = speed.vel_left
+        self.previous_right = speed.vel_right
+        self.pub.publish(speed)
+        
+    def turn_sharp_right(self, line_sens, max_speed):
+        sharp_right_turn_sens_values = [[0,0,1,1,1,1,1,1],
+                                        [0,0,0,1,1,1,1,1],
+                                        [0,0,0,0,1,1,1,1],
+                                        [0,0,0,0,0,1,1,1]]
+        if line_sens in sharp_right_turn_sens_values:
+            speed.vel_left = max_speed*2
+            speed.vel_right = 0
+            self.pub.publish(speed)
+    
+    def turn_sharp_left(self, line_sens, max_speed):
+        sharp_left_turn_sens_values = [[1,1,1,1,1,1,0,0],
+                                        [1,1,1,1,1,0,0,0],
+                                        [1,1,1,1,0,0,0,0],
+                                        [1,1,1,0,0,0,0,0]]
+        if line_sens in sharp_left_turn_sens_values:
+            speed.vel_left = 0
+            speed.vel_right = max_speed*2
+            self.pub.publish(speed)
+        
     def on_shutdown(self):
         speed.vel_left = 0
         speed.vel_right = 0
         self.pub.publish(speed)
-        time.sleep(0.5)
         self.bus.close()
         
     def run(self):
@@ -54,43 +78,27 @@ class MyPublisherNode(DTROS):
             if self.tofdata == "wall in progress":
                 pass
             else:
-                line_sens, read, correction, error= pid.PidClass().pid_run(self.lasterror)
                 max_speed = float(rospy.get_param("/maxvel"))
+                line_sens, correction, error= pid.PidClass().pid_run(self.last_error)
                 
-                if line_sens == [0,0,0,0,1,1,1,1] or line_sens == [0,0,0,0,0,1,1,1] or line_sens == [0,0,0,1,1,1,1,1] or line_sens == [0,0,1,1,1,1,1,1]: #parem 90 kraadi
-                    speed.vel_left = max_speed*2
-                    speed.vel_right = 0
-                    self.pub.publish(speed)
-                if line_sens == [1,1,1,1,0,0,0,0] or line_sens == [1,1,1,0,0,0,0,0] or line_sens == [1,1,1,1,1,0,0,0] or line_sens == [1,1,1,1,1,1,0,0]: #vasak 90 kraadi
-                    speed.vel_left = 0
-                    speed.vel_right = max_speed*2
-                    self.pub.publish(speed)
+                self.turn_sharp_right(line_sens, max_speed)
+                self.turn_sharp_left(line_sens, max_speed)
                 
                 if correction < -1 or correction > 1:
-                    correction = self.lastcorrection
+                    correction = self.last_correction
                 else:
-                    self.lasterror = error
-                    self.lastcorrection = correction
+                    self.last_error = error
+                    self.last_correction = correction
                 
-                speed.vel_left = max_speed - correction
-                speed.vel_right = max_speed + correction
-                if len(line_sens) == 0:
-                    speed.vel_left = self.previous_left
-                    speed.vel_right = self.previous_right
-                speed.vel_left = max(0.0, min(speed.vel_left, 0.5))
-                speed.vel_right = max(0.0, min(speed.vel_right, 0.5))
-                self.previous_left = speed.vel_left
-                self.previous_right = speed.vel_right
-                self.pub.publish(speed)
+                self.publish_pid_values_to_speed(max_speed, correction, line_sens)
                 
                 print("---| P =", rospy.get_param("/p"),
                       "|---| I =", rospy.get_param("/i"),
                       "|---| D =", rospy.get_param("/d"),
                       '|---| Speed =', rospy.get_param("/maxvel"),
+                      '|---| Correction =', round(correction, 3),
                       "|---")
-                #print("Odomeetria publisher: ", self.ododata)
-                print('correction = ', correction)
-                print(read)
+                #print("Odometry: ", self.ododata)
             rate.sleep()
             
 if __name__ == '__main__':

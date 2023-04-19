@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
-import os
 import rospy
 from duckietown.dtros import DTROS, NodeType
 from std_msgs.msg import String
-from duckietown_msgs.msg import WheelsCmdStamped, WheelEncoderStamped
-import numpy as np
+from duckietown_msgs.msg import WheelsCmdStamped
 from sensor_msgs.msg import Range
 import time
 
@@ -18,7 +16,7 @@ class TofPublish(DTROS):
         self.tof = rospy.Subscriber('/kigebot/front_center_tof_driver_node/range', Range, self.tof_sensor_callback)
         self.pub = rospy.Publisher('/kigebot/wheels_driver_node/wheels_cmd', WheelsCmdStamped, queue_size=10)
     
-        self.kaugus = 0
+        self.distance = 0
         self.range = 0
         
     def tof_sensor_callback(self,data):
@@ -27,15 +25,14 @@ class TofPublish(DTROS):
     def run(self):
         rate = rospy.Rate(20)
         while not rospy.is_shutdown():
-            self.kaugus_cm = round(self.range*100, 1) #teeb tof sensori kauguse sentimeetriteks ja ümardab
-            while self.kaugus_cm <= 30.0:
-                self.kaugus_cm = round(self.range*100, 1)
+            self.distance_cm = round(self.range*100, 1) #teeb tof sensori kauguse sentimeetriteks ja ümardab
+            while self.distance_cm <= 30.0:
+                self.distance_cm = round(self.range*100, 1)
                 self.tofpub.publish("wall in progress")
                 print("Wall in progress")
                 speed.vel_right = 0
                 speed.vel_left = 0.2
                 self.pub.publish(speed)
-                #time.sleep(0.5)
                 self.sein = 1
                 rate.sleep()
 

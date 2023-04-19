@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 import rospy
 from duckietown.dtros import DTROS, NodeType
 from std_msgs.msg import String
@@ -16,8 +15,6 @@ class OdometryNode(DTROS):
         self.seqLeft = rospy.Subscriber('/kigebot/left_wheel_encoder_node/tick', WheelEncoderStamped, self.time_leftwheel)
         self.seqRight = rospy.Subscriber('/kigebot/right_wheel_encoder_node/tick', WheelEncoderStamped ,self.time_rightwheel)
 
-        #-------------------VARIABLES-------------------
-        
         self.right = 0
         self.left = 0
         self.timeL = 0
@@ -46,16 +43,19 @@ class OdometryNode(DTROS):
     def time_rightwheel(self, data):
         self.timeR = data.header.seq 
         
+    #---------------------------------------------------------
+        
     def Odometry_func(self):
         N_tot = 135                                                             # total number of ticks per revolution
-        R = 0.065                                                               # ratta diameeter meetrites
+        R = 0.065                                                               # wheel diameter in meters
+        
         alpha = 2 * np.pi / N_tot                                               # wheel rotation per tick in radians
         
         self.ticks_right = self.right
         self.ticks_left = self.left
         
-        self.delta_ticks_left = self.ticks_left-self.prev_tick_left             # delta ticks of left wheel
-        self.delta_ticks_right = self.ticks_right-self.prev_tick_right          # delta ticks of right wheel
+        self.delta_ticks_left = self.ticks_left-self.prev_tick_left
+        self.delta_ticks_right = self.ticks_right-self.prev_tick_right
         
         self.rotation_wheel_left = alpha * self.delta_ticks_left                # kogu vasaku ratta põõrded radiaanides
         self.rotation_wheel_right = alpha * self.delta_ticks_right              # kogu parema ratta põõrded radiaanides
@@ -72,14 +72,11 @@ class OdometryNode(DTROS):
         odolist = f"{self.ticks_right}, {self.ticks_left}, {wtravel}, {Delta_Theta}"
             
         return odolist                                                          # tagastab odomeetria info massiivina
-        #return "function return"
         
     def run(self):
         rate = rospy.Rate(15)
         while not rospy.is_shutdown():
             odom = self.Odometry_func()
-            #test_string = "Test publish string"
-            #rospy.loginfo("Publishing message: ", test_string)
             self.pub.publish(odom)
             rate.sleep()
 
