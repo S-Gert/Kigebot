@@ -27,7 +27,9 @@ class MyPublisherNode(DTROS):
         self.previous_left = 0
         self.previous_right = 0
         self.last_error = 0
-        self.last_correction = 0    
+        self.last_correction = 0
+        
+        self.print_counter = 0
     
     def odometry_callback(self, data):
         self.ododata = data.data
@@ -48,36 +50,52 @@ class MyPublisherNode(DTROS):
         self.pub.publish(speed)
         
     def turn_sharp_right(self, line_sens, max_speed):
-        sharp_right_turn_sens_values = [[0,0,1,1,1,1,1,1],
-                                        [0,0,0,1,1,1,1,1],
-                                        [0,0,0,0,1,1,1,1],
-                                        [0,0,0,0,0,1,1,1]]
+        sharp_right_turn_sens_values = [[3,4,5,6,7,8],
+                                          [4,5,6,7,8],
+                                            [5,6,7,8],
+                                              [6,7,8]]
         if line_sens in sharp_right_turn_sens_values:
             speed.vel_left = max_speed*2
             speed.vel_right = 0
             self.pub.publish(speed)
+            print("Right turn")
     
     def turn_sharp_left(self, line_sens, max_speed):
-        sharp_left_turn_sens_values = [[1,1,1,1,1,1,0,0],
-                                       [1,1,1,1,1,0,0,0],
-                                       [1,1,1,1,0,0,0,0],
-                                       [1,1,1,0,0,0,0,0]]
+        sharp_left_turn_sens_values = [[1,2,3,4,5,6],
+                                       [1,2,3,4,5],
+                                       [1,2,3,4],
+                                       [1,2,3]]
         if line_sens in sharp_left_turn_sens_values:
             speed.vel_left = 0
             speed.vel_right = max_speed*2
             self.pub.publish(speed)
+            print("Left turn")
             
     def turn_when_cut_in_line(self, line_sens, max_speed): # WIP
-        line_values = [[1,1,0,0,1,1,0,0],
-                       [1,1,0,0,1,0,1,1],
-                       [1,1,0,1,1,0,0,1],
-                       [1,0,0,1,0,0,0,1]]
+        line_values = [[1,2,4,5],
+                       [1,4,5],
+                       [1,4],
+                       [1,2,4],
+                       [2,3,5,6]]
         if line_sens in line_values:
-            speed.vel_left = max_speed*0.2
+            speed.vel_left = max_speed*0.5
             speed.vel_right = max_speed
             self.pub.publish(speed)
             print("line split")
+            time.sleep(0.75)
             print("line split function done")
+            
+    def print_data_interval(self, correction):
+        self.print_counter = self.print_counter + 1
+        if self.print_counter == 10:
+            print("---| P =", rospy.get_param("/p"),
+                "|---| I =", rospy.get_param("/i"),
+                "|---| D =", rospy.get_param("/d"),
+                '|---| Speed =', rospy.get_param("/maxvel"),
+                '|---| Correction =', round(correction, 3),
+                "|---")
+            self.print_counter = 0
+            #print("Odometry: ", self.ododata)
             
     def on_shutdown(self):
         speed.vel_left = 0
@@ -91,7 +109,7 @@ class MyPublisherNode(DTROS):
             if self.tofdata == "wall in progress":
                 pass
             else:
-                max_speed = float(rospy.get_param("/maxvel"))
+                max_speed = float(rospy.get_param("/maxvel", 0.25))
                 line_sens, correction, error = pid.PidClass().pid_run(self.last_error)
                 
                 self.turn_sharp_right(line_sens, max_speed)
@@ -105,14 +123,8 @@ class MyPublisherNode(DTROS):
                 
                 self.publish_pid_values_to_speed(max_speed, correction, line_sens)
                 self.turn_when_cut_in_line(line_sens, max_speed)
+                self.print_data_interval(correction)
                 
-                print("---| P =", rospy.get_param("/p"),
-                      "|---| I =", rospy.get_param("/i"),
-                      "|---| D =", rospy.get_param("/d"),
-                      '|---| Speed =', rospy.get_param("/maxvel"),
-                      '|---| Correction =', round(correction, 3),
-                      "|---")
-                #print("Odometry: ", self.ododata)
             rate.sleep()
             
 if __name__ == '__main__':

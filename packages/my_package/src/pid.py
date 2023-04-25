@@ -20,9 +20,9 @@ class PidClass():
             read = self.bus.read_byte_data(62,17)
             read = bin(read)[2:].zfill(8)
             
-            Kp = float(rospy.get_param("/p")) # 0.045
-            Ki = float(rospy.get_param("/i")) # 0.001
-            Kd = float(rospy.get_param("/d")) # 0.017
+            Kp = float(rospy.get_param("/p", 0.045)) # 0.045
+            Ki = float(rospy.get_param("/i", 0.001)) # 0.001
+            Kd = float(rospy.get_param("/d", 0.015)) # 0.017
             
             line_sens = []
             
