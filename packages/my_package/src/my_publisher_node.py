@@ -6,6 +6,7 @@ from std_msgs.msg import String
 from smbus2 import SMBus
 from duckietown_msgs.msg import WheelsCmdStamped
 import pid
+import time
 
 speed = WheelsCmdStamped()
 
@@ -58,14 +59,26 @@ class MyPublisherNode(DTROS):
     
     def turn_sharp_left(self, line_sens, max_speed):
         sharp_left_turn_sens_values = [[1,1,1,1,1,1,0,0],
-                                        [1,1,1,1,1,0,0,0],
-                                        [1,1,1,1,0,0,0,0],
-                                        [1,1,1,0,0,0,0,0]]
+                                       [1,1,1,1,1,0,0,0],
+                                       [1,1,1,1,0,0,0,0],
+                                       [1,1,1,0,0,0,0,0]]
         if line_sens in sharp_left_turn_sens_values:
             speed.vel_left = 0
             speed.vel_right = max_speed*2
             self.pub.publish(speed)
-        
+            
+    def turn_when_cut_in_line(self, line_sens, max_speed): # WIP
+        line_values = [[1,1,0,0,1,1,0,0],
+                       [1,1,0,0,1,0,1,1],
+                       [1,1,0,1,1,0,0,1],
+                       [1,0,0,1,0,0,0,1]]
+        if line_sens in line_values:
+            speed.vel_left = max_speed*0.2
+            speed.vel_right = max_speed
+            self.pub.publish(speed)
+            print("line split")
+            print("line split function done")
+            
     def on_shutdown(self):
         speed.vel_left = 0
         speed.vel_right = 0
@@ -79,7 +92,7 @@ class MyPublisherNode(DTROS):
                 pass
             else:
                 max_speed = float(rospy.get_param("/maxvel"))
-                line_sens, correction, error= pid.PidClass().pid_run(self.last_error)
+                line_sens, correction, error = pid.PidClass().pid_run(self.last_error)
                 
                 self.turn_sharp_right(line_sens, max_speed)
                 self.turn_sharp_left(line_sens, max_speed)
@@ -91,6 +104,7 @@ class MyPublisherNode(DTROS):
                     self.last_correction = correction
                 
                 self.publish_pid_values_to_speed(max_speed, correction, line_sens)
+                self.turn_when_cut_in_line(line_sens, max_speed)
                 
                 print("---| P =", rospy.get_param("/p"),
                       "|---| I =", rospy.get_param("/i"),
