@@ -71,7 +71,7 @@ class MyPublisherNode(DTROS):
             self.pub.publish(speed)
             print("Left turn")
             
-    def turn_when_cut_in_line(self, line_sens, max_speed): # WIP
+    def turn_when_cut_in_line(self, line_sens, max_speed):
         line_values = [[1,2,4,5],
                        [1,4,5],
                        [1,4],
@@ -85,7 +85,7 @@ class MyPublisherNode(DTROS):
             time.sleep(0.75)
             print("line split function done")
             
-    def print_data_interval(self, correction):
+    def print_data_with_interval(self, correction):
         self.print_counter = self.print_counter + 1
         if self.print_counter == 10:
             print("---| P =", rospy.get_param("/p"),
@@ -123,7 +123,7 @@ class MyPublisherNode(DTROS):
                 
                 self.publish_pid_values_to_speed(max_speed, correction, line_sens)
                 self.turn_when_cut_in_line(line_sens, max_speed)
-                self.print_data_interval(correction)
+                self.print_data_with_interval(correction)
                 
             rate.sleep()
             

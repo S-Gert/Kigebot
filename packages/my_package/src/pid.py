@@ -12,7 +12,6 @@ class PidClass():
         self.bus = SMBus(1)
         self.sens_middle = 4.5
         self.delta_time = 1/15
-        self.error = 0
         self.integral = 0
 
     def pid_run(self, last_error):
@@ -31,13 +30,13 @@ class PidClass():
                     line_sens.append(indx + 1)
                     
             if len(line_sens) > 0:
-                self.error = self.sens_middle - np.average(line_sens)
+                error = self.sens_middle - np.average(line_sens)
             else:
-                self.error = 0
+                error = 0
             
-            self.integral = self.integral + (self.error + last_error)*self.delta_time/2
+            self.integral = self.integral + (error + last_error)*self.delta_time/2
             self.integral = min(max(self.integral, -2), 2)
-            derivative = (self.error - last_error)/self.delta_time
-            correction = Kp * self.error + Ki * self.integral + Kd * derivative
+            derivative = (error - last_error)/self.delta_time
+            correction = Kp * error + Ki * self.integral + Kd * derivative
             
-            return line_sens, correction, self.error
+            return line_sens, correction, error
