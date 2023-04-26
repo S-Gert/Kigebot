@@ -112,7 +112,7 @@ class MyPublisherNode(DTROS):
             if self.tofdata == "wall in progress":
                 pass
             else:
-                max_speed = float(rospy.get_param("/maxvel", 0.25))
+                max_speed = float(rospy.get_param("/maxvel", 0.35))
                 line_sens, correction, error = pid.PidClass().pid_run(self.last_error)
                 
                 self.turn_sharp_right(line_sens, max_speed)

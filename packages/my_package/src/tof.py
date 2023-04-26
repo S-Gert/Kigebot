@@ -38,10 +38,10 @@ class TofPublish(DTROS):
 
             if self.sein == 1:
                 time.sleep(0.15)
-                speed.vel_right = 0.5
+                speed.vel_right = 0.52
                 speed.vel_left = 0.3
                 self.pub.publish(speed)
-                time.sleep(2.4)
+                time.sleep(2.3)
                 speed.vel_right = 0.0
                 speed.vel_left = 0.7
                 self.pub.publish(speed)
