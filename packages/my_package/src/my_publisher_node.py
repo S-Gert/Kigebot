@@ -113,17 +113,12 @@ class MyPublisherNode(DTROS):
                 pass
             else:
                 max_speed = float(rospy.get_param("/maxvel", 0.35))
-                line_sens, correction, error = pid.PidClass().pid_run(self.last_error)
-                
+                line_sens, correction, self.last_correction, self.last_error = pid.PidClass().pid_run(self.last_error, self.last_correction)
+
                 self.turn_sharp_right(line_sens, max_speed)
                 self.turn_sharp_left(line_sens, max_speed)
-                self.turn_when_cut_in_line(line_sens, max_speed)
                 
-                if correction < -1 or correction > 1:
-                    correction = self.last_correction
-                else:
-                    self.last_error = error
-                    self.last_correction = correction
+                self.turn_when_cut_in_line(line_sens, max_speed)
                 
                 self.publish_pid_values_to_speed(max_speed, correction, line_sens)
                 self.print_data_with_interval(correction)
