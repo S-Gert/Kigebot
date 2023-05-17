@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import rospy
-from duckietown.dtros import DTROS, NodeType
 from std_msgs.msg import String
 import numpy as np
 from smbus2 import SMBus
@@ -11,7 +10,7 @@ class PidClass():
     def __init__(self):
         self.bus = SMBus(1)
         self.sens_middle = 4.5
-        self.delta_time = 1/15
+        self.delta_time = 1/20
         self.integral = 0
 
     def pid_run(self, last_error, last_correction):
@@ -19,9 +18,9 @@ class PidClass():
             read = self.bus.read_byte_data(62,17)
             read = bin(read)[2:].zfill(8)
             
-            Kp = float(rospy.get_param("/p", 0.045))
+            Kp = float(rospy.get_param("/p", 0.100))
             Ki = float(rospy.get_param("/i", 0.001))
-            Kd = float(rospy.get_param("/d", 0.015))
+            Kd = float(rospy.get_param("/d", 0.017))
             
             line_sens = []
             
@@ -33,7 +32,6 @@ class PidClass():
                 error = self.sens_middle - np.average(line_sens)
             else:
                 error = 0
-            
             
             self.integral = self.integral + (error + last_error)*self.delta_time/2
             self.integral = min(max(self.integral, -2), 2)

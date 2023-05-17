@@ -16,9 +16,10 @@ dt-launchfile-init
 
 
 dt-exec rosrun my_package my_publisher_node.py
-dt-exec rosrun my_package Odometry.py
+#dt-exec rosrun my_package Odometry.py
 dt-exec rosrun my_package pid.py
 dt-exec rosrun my_package tof.py
+#dt-exec rosrun my_package sharp_turns.py
 
 # ----------------------------------------------------------------------------
 # YOUR CODE ABOVE THIS LINE

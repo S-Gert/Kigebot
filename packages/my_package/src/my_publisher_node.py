@@ -43,32 +43,34 @@ class MyPublisherNode(DTROS):
         if len(line_sens) == 0:
             speed.vel_left = self.previous_left
             speed.vel_right = self.previous_right
-        speed.vel_left = max(0.0, min(speed.vel_left, 0.5))
-        speed.vel_right = max(0.0, min(speed.vel_right, 0.5))
+        speed.vel_left = max(0.0, min(speed.vel_left, 0.7))
+        speed.vel_right = max(0.0, min(speed.vel_right, 0.7))
         self.previous_left = speed.vel_left
         self.previous_right = speed.vel_right
         self.pub.publish(speed)
         
-    def turn_sharp_right(self, line_sens, max_speed):
+    def turn_sharp_right(self, line_sens):
         sharp_right_turn_sens_values = [[3,4,5,6,7,8],
                                           [4,5,6,7,8],
                                             [5,6,7,8],
                                               [6,7,8]]
         if line_sens in sharp_right_turn_sens_values:
-            speed.vel_left = max_speed*2
+            speed.vel_left = 0.7
             speed.vel_right = 0
             self.pub.publish(speed)
+            time.sleep(0.15)
             print("Right turn")
     
-    def turn_sharp_left(self, line_sens, max_speed):
+    def turn_sharp_left(self, line_sens):
         sharp_left_turn_sens_values = [[1,2,3,4,5,6],
                                        [1,2,3,4,5],
                                        [1,2,3,4],
                                        [1,2,3]]
         if line_sens in sharp_left_turn_sens_values:
             speed.vel_left = 0
-            speed.vel_right = max_speed*2
+            speed.vel_right = 0.7
             self.pub.publish(speed)
+            time.sleep(0.15)
             print("Left turn")
             
     def turn_when_cut_in_line(self, line_sens, max_speed):
@@ -107,16 +109,16 @@ class MyPublisherNode(DTROS):
         self.bus.close()
         
     def run(self):
-        rate = rospy.Rate(15)
+        rate = rospy.Rate(20)
         while not rospy.is_shutdown():
             if self.tofdata == "wall in progress":
                 pass
             else:
-                max_speed = float(rospy.get_param("/maxvel", 0.35))
+                max_speed = float(rospy.get_param("/maxvel", 0.25))
                 line_sens, correction, self.last_correction, self.last_error = pid.PidClass().pid_run(self.last_error, self.last_correction)
 
-                self.turn_sharp_right(line_sens, max_speed)
-                self.turn_sharp_left(line_sens, max_speed)
+                self.turn_sharp_right(line_sens)
+                self.turn_sharp_left(line_sens)
                 
                 self.turn_when_cut_in_line(line_sens, max_speed)
                 

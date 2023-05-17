@@ -18,6 +18,7 @@ class TofPublish(DTROS):
     
         self.distance = 0
         self.range = 0
+        self.wall_sequence = 0
         
     def tof_sensor_callback(self,data):
         self.range = data.range
@@ -26,32 +27,32 @@ class TofPublish(DTROS):
         rate = rospy.Rate(20)
         while not rospy.is_shutdown():
             self.distance_cm = round(self.range*100, 1) #teeb tof sensori kauguse sentimeetriteks ja ümardab
-            while self.distance_cm <= 35.0:
+            while self.distance_cm <= 30.0:
                 self.distance_cm = round(self.range*100, 1)
                 self.tofpub.publish("wall in progress")
                 print("Wall in progress")
                 speed.vel_right = 0
-                speed.vel_left = 0.2
+                speed.vel_left = 0.6
                 self.pub.publish(speed)
-                self.sein = 1
+                self.wall_sequence = 1
                 rate.sleep()
 
-            if self.sein == 1:
+            if self.wall_sequence == 1:
                 time.sleep(0.15)
-                speed.vel_right = 0.52
-                speed.vel_left = 0.3
+                speed.vel_right = 0.45
+                speed.vel_left = 0.2
                 self.pub.publish(speed)
-                time.sleep(2.3)
-                speed.vel_right = 0.0
-                speed.vel_left = 0.7
+                time.sleep(1.6)
+                speed.vel_right = 0.25
+                speed.vel_left = 0.25
                 self.pub.publish(speed)
-                time.sleep(0.25)
                 self.tofpub.publish("no wall")
                 print("Wall done")
-                self.sein = 0
+                self.wall_sequence = 0
             rate.sleep()
 
 if __name__ == '__main__':
     node = TofPublish(node_name='tof_publisher')
+    time.sleep(3) #prevents tof from activating on robot bootup
     node.run()
     rospy.spin()
