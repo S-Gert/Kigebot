@@ -39,13 +39,18 @@ class TofPublish(DTROS):
 
             if self.wall_sequence == 1:
                 time.sleep(0.15)
-                speed.vel_right = 0.7
+                speed.vel_right = 0.6
                 speed.vel_left = 0.10
                 self.pub.publish(speed)
-                time.sleep(1.1)
-                speed.vel_right = 0.25
-                speed.vel_left = 0.25
+                time.sleep(1.3)
+                speed.vel_right = 0
+                speed.vel_left = 0
                 self.pub.publish(speed)
+                time.sleep(0.1)
+                speed.vel_right = 0.2
+                speed.vel_left = 0.3
+                self.pub.publish(speed)
+                time.sleep(0.7)
                 self.tofpub.publish("no wall")
                 print("Wall done")
                 self.wall_sequence = 0

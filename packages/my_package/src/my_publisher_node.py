@@ -54,7 +54,7 @@ class MyPublisherNode(DTROS):
                                         [5,6,7,8],
                                         [6,7,8]]
         if line_sens in sharp_right_turn_sens_values:
-            speed.vel_left = 0.3
+            speed.vel_left = 0.2
             speed.vel_right = 0
             self.pub.publish(speed)
             time.sleep(0.1)
@@ -66,7 +66,7 @@ class MyPublisherNode(DTROS):
                                        [1,2,3]]
         if line_sens in sharp_left_turn_sens_values:
             speed.vel_left = 0
-            speed.vel_right = 0.3
+            speed.vel_right = 0.2
             self.pub.publish(speed)
             time.sleep(0.1)
             print("Left turn")
