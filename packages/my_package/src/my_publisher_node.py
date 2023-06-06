@@ -50,27 +50,25 @@ class MyPublisherNode(DTROS):
         self.pub.publish(speed)
         
     def turn_sharp_right(self, line_sens):
-        sharp_right_turn_sens_values = [[3,4,5,6,7,8],
-                                          [4,5,6,7,8],
-                                            [5,6,7,8],
-                                              [6,7,8]]
+        sharp_right_turn_sens_values = [[4,5,6,7,8], #[3,4,5,6,7,8],
+                                        [5,6,7,8],
+                                        [6,7,8]]
         if line_sens in sharp_right_turn_sens_values:
-            speed.vel_left = 0.7
+            speed.vel_left = 0.3
             speed.vel_right = 0
             self.pub.publish(speed)
-            time.sleep(0.15)
+            time.sleep(0.1)
             print("Right turn")
     
     def turn_sharp_left(self, line_sens):
-        sharp_left_turn_sens_values = [[1,2,3,4,5,6],
-                                       [1,2,3,4,5],
+        sharp_left_turn_sens_values = [[1,2,3,4,5], #[1,2,3,4,5,6],
                                        [1,2,3,4],
                                        [1,2,3]]
         if line_sens in sharp_left_turn_sens_values:
             speed.vel_left = 0
-            speed.vel_right = 0.7
+            speed.vel_right = 0.3
             self.pub.publish(speed)
-            time.sleep(0.15)
+            time.sleep(0.1)
             print("Left turn")
             
     def turn_when_cut_in_line(self, line_sens, max_speed):
@@ -84,7 +82,7 @@ class MyPublisherNode(DTROS):
         if line_sens in line_values:
             print("line split")
             time.sleep(0.15)
-            speed.vel_left = max_speed*0.3
+            speed.vel_left = max_speed*0.5
             speed.vel_right = max_speed
             self.pub.publish(speed)
             time.sleep(0.75)
@@ -92,11 +90,13 @@ class MyPublisherNode(DTROS):
             
     def print_data_with_interval(self, correction):
         self.print_counter = self.print_counter + 1
-        if self.print_counter == 15:
+        if self.print_counter == 10:
             print("---| P =", rospy.get_param("/p"),
                 "|---| I =", rospy.get_param("/i"),
                 "|---| D =", rospy.get_param("/d"),
                 '|---| Speed =', rospy.get_param("/maxvel"),
+                '|---| Vel_left =', speed.vel_left,
+                '|---| Vel_right =', speed.vel_right,
                 '|---| Correction =', round(correction, 3),
                 "|---")
             self.print_counter = 0
@@ -112,7 +112,7 @@ class MyPublisherNode(DTROS):
         rate = rospy.Rate(20)
         while not rospy.is_shutdown():
             if self.tofdata == "wall in progress":
-                pass
+                self.last_error = 0
             else:
                 max_speed = float(rospy.get_param("/maxvel", 0.25))
                 line_sens, correction, self.last_correction, self.last_error = pid.PidClass().pid_run(self.last_error, self.last_correction)
@@ -127,7 +127,7 @@ class MyPublisherNode(DTROS):
                 
             rate.sleep()
             
-if __name__ == '__main__':
+if __name__ == '__main__':  
     node = MyPublisherNode(node_name='my_publisher_node')
     rospy.on_shutdown(node.on_shutdown)
     node.run()
